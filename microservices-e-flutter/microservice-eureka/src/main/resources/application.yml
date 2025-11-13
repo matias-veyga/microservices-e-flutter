@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: msvc-eureka
+  cloud:
+    config:
+      enabled: false
+      import-check:
+        enabled: false
+
+server:
+  port: 8761
+
+eureka:
+  instance:
+    hostname: localhost  # Para LAN: cambiar por la IP del servidor (ej: 192.168.1.100)
+    prefer-ip-address: true
+  client:
+    register-with-eureka: false  # Eureka no se registra a sí mismo
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka  # Para LAN: cambiar por http://192.168.1.100:8761/eureka

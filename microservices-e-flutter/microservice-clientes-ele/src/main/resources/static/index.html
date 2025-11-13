@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Clientes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .client-card {
+            transition: transform 0.3s ease;
+            border-left: 4px solid #28a745;
+        }
+        .client-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #007bff, #28a745);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .contact-info {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-users"></i> Sistema de Clientes
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showClientes()">
+                            <i class="fas fa-list"></i> Ver Clientes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showCreateForm()">
+                            <i class="fas fa-user-plus"></i> Crear Cliente
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Panel de Clientes -->
+        <div id="clientes-panel">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h2><i class="fas fa-users"></i> Gestión de Clientes</h2>
+                    <p class="text-muted">Administra los clientes del sistema</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-success" onclick="showCreateForm()">
+                        <i class="fas fa-user-plus"></i> Nuevo Cliente
+                    </button>
+                </div>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <i class="fas fa-users fa-2x mb-2"></i>
+                            <h4 id="totalClientes">0</h4>
+                            <small>Total Clientes</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <i class="fas fa-elevator fa-2x mb-2"></i>
+                            <h4 id="clientesConElevador">0</h4>
+                            <small>Con Elevador</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <i class="fas fa-user-times fa-2x mb-2"></i>
+                            <h4 id="clientesSinElevador">0</h4>
+                            <small>Sin Elevador</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body text-center">
+                            <i class="fas fa-sync fa-2x mb-2"></i>
+                            <h4 id="ultimaActualizacion">--</h4>
+                            <small>Última Actualización</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Buscar cliente...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="elevadorFilter">
+                        <option value="">Todos los elevadores</option>
+                        <option value="con">Con elevador</option>
+                        <option value="sin">Sin elevador</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="number" class="form-control" id="elevadorIdFilter" placeholder="ID Elevador específico">
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" onclick="loadClientes()">
+                        <i class="fas fa-sync"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lista de Clientes -->
+            <div id="clientes-list" class="row">
+                <!-- Los clientes se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Formulario de Creación -->
+        <div id="create-form" style="display: none;">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4><i class="fas fa-user-plus"></i> Crear Nuevo Cliente</h4>
+                        </div>
+                        <div class="card-body">
+                            <form id="clienteForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="nombre" class="form-label">Nombre</label>
+                                        <input type="text" class="form-control" id="nombre" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="apellido" class="form-label">Apellido</label>
+                                        <input type="text" class="form-control" id="apellido" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="DNI" class="form-label">DNI</label>
+                                        <input type="text" class="form-control" id="DNI" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="telefono" class="form-label">Teléfono</label>
+                                        <input type="tel" class="form-control" id="telefono" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="direccion" class="form-label">Dirección</label>
+                                    <textarea class="form-control" id="direccion" rows="3" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="elevadorId" class="form-label">ID del Elevador (opcional)</label>
+                                    <input type="number" class="form-control" id="elevadorId" min="1" placeholder="Dejar vacío si no tiene elevador asignado">
+                                </div>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="button" class="btn btn-secondary" onclick="showClientes()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save"></i> Guardar Cliente
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Ver Detalles del Cliente -->
+        <div class="modal fade" id="clienteModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-user"></i> Detalles del Cliente</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="cliente-details">
+                            <!-- Los detalles se cargarán aquí -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Para LAN: cambiar de localhost a IP del servidor Gateway
+        const API_BASE_URL = 'http://localhost:6768/api/cliente';  // Para LAN: cambiar por 'http://192.168.1.100:6768/api/cliente'
+        
+        // Cargar clientes al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadClientes();
+        });
+
+        // Mostrar panel de clientes
+        function showClientes() {
+            document.getElementById('clientes-panel').style.display = 'block';
+            document.getElementById('create-form').style.display = 'none';
+            loadClientes();
+        }
+
+        // Mostrar formulario de creación
+        function showCreateForm() {
+            document.getElementById('clientes-panel').style.display = 'none';
+            document.getElementById('create-form').style.display = 'block';
+            document.getElementById('clienteForm').reset();
+        }
+
+        // Cargar lista de clientes
+        async function loadClientes() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/all`);
+                const clientes = await response.json();
+                displayClientes(clientes);
+                updateStatistics(clientes);
+                updateLastUpdate();
+            } catch (error) {
+                console.error('Error al cargar clientes:', error);
+                showAlert('Error al cargar los clientes', 'danger');
+            }
+        }
+
+        // Mostrar clientes en la interfaz
+        function displayClientes(clientes) {
+            const container = document.getElementById('clientes-list');
+            container.innerHTML = '';
+
+            if (clientes.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle"></i> No hay clientes registrados
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            clientes.forEach(cliente => {
+                const card = createClienteCard(cliente);
+                container.appendChild(card);
+            });
+        }
+
+        // Crear tarjeta de cliente
+        function createClienteCard(cliente) {
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4 mb-4';
+            
+            const initials = `${cliente.nombre.charAt(0)}${cliente.apellido.charAt(0)}`.toUpperCase();
+            const hasElevador = cliente.elevadorId ? 'Con Elevador' : 'Sin Elevador';
+            const elevadorBadge = cliente.elevadorId ? 'bg-success' : 'bg-warning';
+            
+            col.innerHTML = `
+                <div class="card client-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar me-3">
+                                ${initials}
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-0">${cliente.nombre} ${cliente.apellido}</h5>
+                                <small class="text-muted">ID: ${cliente.id}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-info">
+                            <div class="mb-2">
+                                <i class="fas fa-id-card text-primary"></i>
+                                <strong> DNI:</strong> ${cliente.DNI}
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-phone text-success"></i>
+                                <strong> Teléfono:</strong> ${cliente.telefono}
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-map-marker-alt text-danger"></i>
+                                <strong> Dirección:</strong> ${cliente.direccion}
+                            </div>
+                            <div>
+                                <i class="fas fa-elevator text-info"></i>
+                                <strong> Estado:</strong> 
+                                <span class="badge ${elevadorBadge}">${hasElevador}</span>
+                                ${cliente.elevadorId ? `<small class="text-muted">(ID: ${cliente.elevadorId})</small>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="viewCliente(${cliente.id})">
+                                <i class="fas fa-eye"></i> Ver Detalles
+                            </button>
+                            ${cliente.elevadorId ? `
+                                <button class="btn btn-outline-info btn-sm" onclick="viewElevadorInfo(${cliente.elevadorId})">
+                                    <i class="fas fa-elevator"></i> Ver Elevador
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return col;
+        }
+
+        // Ver detalles de un cliente
+        async function viewCliente(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/search/${id}`);
+                const cliente = await response.json();
+                
+                const detailsDiv = document.getElementById('cliente-details');
+                detailsDiv.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-user"></i> Información Personal</h6>
+                            <p><strong>Nombre:</strong> ${cliente.nombre} ${cliente.apellido}</p>
+                            <p><strong>DNI:</strong> ${cliente.DNI}</p>
+                            <p><strong>Teléfono:</strong> ${cliente.telefono}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-map-marker-alt"></i> Ubicación</h6>
+                            <p><strong>Dirección:</strong> ${cliente.direccion}</p>
+                            <h6><i class="fas fa-elevator"></i> Elevador</h6>
+                            <p><strong>Estado:</strong> ${cliente.elevadorId ? 'Asignado' : 'No asignado'}</p>
+                            ${cliente.elevadorId ? `<p><strong>ID Elevador:</strong> ${cliente.elevadorId}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                const modal = new bootstrap.Modal(document.getElementById('clienteModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error al obtener cliente:', error);
+                showAlert('Error al obtener los detalles del cliente', 'danger');
+            }
+        }
+
+        // Ver información del elevador
+        function viewElevadorInfo(elevadorId) {
+            showAlert(`Información del elevador ID: ${elevadorId}. Para más detalles, consulta el sistema de elevadores.`, 'info');
+        }
+
+        // Actualizar estadísticas
+        function updateStatistics(clientes) {
+            const totalClientes = clientes.length;
+            const clientesConElevador = clientes.filter(c => c.elevadorId).length;
+            const clientesSinElevador = totalClientes - clientesConElevador;
+            
+            document.getElementById('totalClientes').textContent = totalClientes;
+            document.getElementById('clientesConElevador').textContent = clientesConElevador;
+            document.getElementById('clientesSinElevador').textContent = clientesSinElevador;
+        }
+
+        // Actualizar última actualización
+        function updateLastUpdate() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('ultimaActualizacion').textContent = timeString;
+        }
+
+        // Manejar envío del formulario
+        document.getElementById('clienteForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const cliente = {
+                nombre: document.getElementById('nombre').value,
+                apellido: document.getElementById('apellido').value,
+                DNI: document.getElementById('DNI').value,
+                telefono: document.getElementById('telefono').value,
+                direccion: document.getElementById('direccion').value,
+                elevadorId: document.getElementById('elevadorId').value ? parseInt(document.getElementById('elevadorId').value) : null
+            };
+            
+            try {
+                console.log('Enviando cliente:', cliente);
+                const response = await fetch(`${API_BASE_URL}/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(cliente)
+                });
+                
+                console.log('Respuesta recibida:', response.status, response.statusText);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Cliente creado:', data);
+                    showAlert('Cliente creado exitosamente', 'success');
+                    document.getElementById('clienteForm').reset();
+                    showClientes();
+                } else {
+                    const errorText = await response.text();
+                    console.error('Error del servidor:', response.status, errorText);
+                    showAlert('Error al crear el cliente: ' + errorText, 'danger');
+                }
+            } catch (error) {
+                console.error('Error al crear cliente:', error);
+                showAlert('Error de conexión: ' + error.message + '. Verifica que el Gateway esté corriendo en el puerto 6768', 'danger');
+            }
+        });
+
+        // Filtros
+        document.getElementById('searchInput').addEventListener('input', function() {
+            filterClientes();
+        });
+
+        document.getElementById('elevadorFilter').addEventListener('change', function() {
+            filterClientes();
+        });
+
+        document.getElementById('elevadorIdFilter').addEventListener('input', function() {
+            filterClientes();
+        });
+
+        // Función de filtrado
+        function filterClientes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const elevadorFilter = document.getElementById('elevadorFilter').value;
+            const elevadorIdFilter = document.getElementById('elevadorIdFilter').value;
+            
+            const cards = document.querySelectorAll('#clientes-list .col-md-6');
+            
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                let show = true;
+                
+                // Filtro de búsqueda
+                if (searchTerm && !text.includes(searchTerm)) {
+                    show = false;
+                }
+                
+                // Filtro de elevador
+                if (elevadorFilter === 'con' && !text.includes('con elevador')) {
+                    show = false;
+                } else if (elevadorFilter === 'sin' && !text.includes('sin elevador')) {
+                    show = false;
+                }
+                
+                // Filtro de ID de elevador específico
+                if (elevadorIdFilter && !text.includes(`id: ${elevadorIdFilter}`)) {
+                    show = false;
+                }
+                
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        // Mostrar alertas
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

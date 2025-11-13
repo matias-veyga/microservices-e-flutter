@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Elevadores</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .elevator-card {
+            transition: transform 0.3s ease;
+            border-left: 4px solid #007bff;
+        }
+        .elevator-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-active { background-color: #28a745; }
+        .status-maintenance { background-color: #ffc107; }
+        .status-inactive { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-elevator"></i> Sistema de Elevadores
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showElevadores()">
+                            <i class="fas fa-list"></i> Ver Elevadores
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showCreateForm()">
+                            <i class="fas fa-plus"></i> Crear Elevador
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Panel de Elevadores -->
+        <div id="elevadores-panel">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h2><i class="fas fa-elevator"></i> Gestión de Elevadores</h2>
+                    <p class="text-muted">Administra los elevadores del sistema</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-primary" onclick="showCreateForm()">
+                        <i class="fas fa-plus"></i> Nuevo Elevador
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Buscar elevador...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="statusFilter">
+                        <option value="">Todos los estados</option>
+                        <option value="activo">Activo</option>
+                        <option value="mantenimiento">Mantenimiento</option>
+                        <option value="inactivo">Inactivo</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-secondary w-100" onclick="loadElevadores()">
+                        <i class="fas fa-sync"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lista de Elevadores -->
+            <div id="elevadores-list" class="row">
+                <!-- Los elevadores se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Formulario de Creación -->
+        <div id="create-form" style="display: none;">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4><i class="fas fa-plus-circle"></i> Crear Nuevo Elevador</h4>
+                        </div>
+                        <div class="card-body">
+                            <form id="elevadorForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="modelo" class="form-label">Modelo</label>
+                                        <input type="text" class="form-control" id="modelo" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="marca" class="form-label">Marca</label>
+                                        <input type="text" class="form-control" id="marca" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="capacidad" class="form-label">Capacidad (personas)</label>
+                                        <input type="number" class="form-control" id="capacidad" min="1" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="direccion" class="form-label">Dirección</label>
+                                        <input type="text" class="form-control" id="direccion" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="clienteId" class="form-label">ID del Cliente</label>
+                                    <input type="number" class="form-control" id="clienteId" min="1">
+                                </div>
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="button" class="btn btn-secondary" onclick="showElevadores()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Guardar Elevador
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Ver Clientes del Elevador -->
+        <div class="modal fade" id="clientesModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-users"></i> Clientes del Elevador</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="clientes-list">
+                            <!-- Los clientes se cargarán aquí -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Asignar Cliente -->
+        <div class="modal fade" id="asignarClienteModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-user-plus"></i> Asignar Cliente</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="clienteSelect" class="form-label">Seleccionar Cliente:</label>
+                            <select class="form-select" id="clienteSelect">
+                                <option value="">Cargando clientes...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">O ingresar ID del Cliente:</label>
+                            <input type="number" class="form-control" id="clienteIdInput" min="1" placeholder="ID del cliente">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="confirmarAsignarCliente()">Asignar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Para LAN: cambiar de localhost a IP del servidor Gateway
+        const API_BASE_URL = 'http://localhost:6768/api/elevador';  // Para LAN: cambiar por 'http://192.168.1.100:6768/api/elevador'
+        const API_CLIENTE_URL = 'http://localhost:6768/api/cliente';  // URL del microservicio de clientes
+        
+        let elevadorIdActual = null; // Para almacenar el ID del elevador que se está editando
+        
+        // Cargar elevadores al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadElevadores();
+        });
+
+        // Mostrar panel de elevadores
+        function showElevadores() {
+            document.getElementById('elevadores-panel').style.display = 'block';
+            document.getElementById('create-form').style.display = 'none';
+            loadElevadores();
+        }
+
+        // Mostrar formulario de creación
+        function showCreateForm() {
+            document.getElementById('elevadores-panel').style.display = 'none';
+            document.getElementById('create-form').style.display = 'block';
+            document.getElementById('elevadorForm').reset();
+        }
+
+        // Cargar lista de elevadores
+        async function loadElevadores() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/all`);
+                const elevadores = await response.json();
+                displayElevadores(elevadores);
+            } catch (error) {
+                console.error('Error al cargar elevadores:', error);
+                showAlert('Error al cargar los elevadores', 'danger');
+            }
+        }
+
+        // Mostrar elevadores en la interfaz
+        function displayElevadores(elevadores) {
+            const container = document.getElementById('elevadores-list');
+            container.innerHTML = '';
+
+            if (elevadores.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle"></i> No hay elevadores registrados
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            elevadores.forEach(elevador => {
+                const card = createElevadorCard(elevador);
+                container.appendChild(card);
+            });
+        }
+
+        // Crear tarjeta de elevador
+        function createElevadorCard(elevador) {
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4 mb-4';
+            
+            col.innerHTML = `
+                <div class="card elevator-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title">
+                                <i class="fas fa-elevator text-primary"></i>
+                                ${elevador.marca} ${elevador.modelo}
+                            </h5>
+                            <span class="badge bg-primary">ID: ${elevador.id}</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Capacidad:</small>
+                            <div class="fw-bold">${elevador.capacidad} personas</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Dirección:</small>
+                            <div class="text-truncate">${elevador.direccion}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Cliente ID:</small>
+                            <div>${elevador.clienteId || 'No asignado'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary btn-sm" onclick="viewElevador(${elevador.id})">
+                                <i class="fas fa-eye"></i> Ver Detalles
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" onclick="viewClientes(${elevador.id})">
+                                <i class="fas fa-users"></i> Ver Clientes
+                            </button>
+                            ${elevador.clienteId 
+                                ? `<button class="btn btn-outline-warning btn-sm" onclick="asignarCliente(${elevador.id})">
+                                    <i class="fas fa-user-edit"></i> Cambiar Cliente
+                                   </button>
+                                   <button class="btn btn-outline-danger btn-sm" onclick="quitarCliente(${elevador.id})">
+                                    <i class="fas fa-user-times"></i> Quitar Cliente
+                                   </button>`
+                                : `<button class="btn btn-outline-success btn-sm" onclick="asignarCliente(${elevador.id})">
+                                    <i class="fas fa-user-plus"></i> Asignar Cliente
+                                   </button>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return col;
+        }
+
+        // Ver detalles de un elevador
+        async function viewElevador(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/search/${id}`);
+                const elevador = await response.json();
+                
+                alert(`Detalles del Elevador:\n\nID: ${elevador.id}\nMarca: ${elevador.marca}\nModelo: ${elevador.modelo}\nCapacidad: ${elevador.capacidad} personas\nDirección: ${elevador.direccion}\nCliente ID: ${elevador.clienteId || 'No asignado'}`);
+            } catch (error) {
+                console.error('Error al obtener elevador:', error);
+                showAlert('Error al obtener los detalles del elevador', 'danger');
+            }
+        }
+
+        // Ver clientes de un elevador
+        async function viewClientes(elevadorId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/search-cliente-by-elevador/${elevadorId}`);
+                const clientes = await response.json();
+                
+                const clientesList = document.getElementById('clientes-list');
+                clientesList.innerHTML = '';
+                
+                if (clientes.length === 0) {
+                    clientesList.innerHTML = `
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No hay clientes asignados a este elevador
+                        </div>
+                    `;
+                } else {
+                    clientes.forEach(cliente => {
+                        const clienteDiv = document.createElement('div');
+                        clienteDiv.className = 'card mb-2';
+                        clienteDiv.innerHTML = `
+                            <div class="card-body py-2">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>${cliente.nombre} ${cliente.apellido}</strong>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">DNI: ${cliente.DNI}</small>
+                                    </div>
+                                </div>
+                                <div class="row mt-1">
+                                    <div class="col-md-6">
+                                        <small>Teléfono: ${cliente.telefono}</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small>Dirección: ${cliente.direccion}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        clientesList.appendChild(clienteDiv);
+                    });
+                }
+                
+                const modal = new bootstrap.Modal(document.getElementById('clientesModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error al obtener clientes:', error);
+                showAlert('Error al obtener los clientes del elevador', 'danger');
+            }
+        }
+
+        // Abrir modal para asignar cliente
+        async function asignarCliente(elevadorId) {
+            elevadorIdActual = elevadorId;
+            
+            // Cargar lista de clientes disponibles
+            try {
+                const response = await fetch(`${API_CLIENTE_URL}/all`);
+                const clientes = await response.json();
+                
+                const select = document.getElementById('clienteSelect');
+                select.innerHTML = '<option value="">Seleccione un cliente...</option>';
+                
+                clientes.forEach(cliente => {
+                    const option = document.createElement('option');
+                    option.value = cliente.id;
+                    option.textContent = `${cliente.nombre} ${cliente.apellido} (ID: ${cliente.id})`;
+                    select.appendChild(option);
+                });
+                
+                // Limpiar el input
+                document.getElementById('clienteIdInput').value = '';
+                
+                const modal = new bootstrap.Modal(document.getElementById('asignarClienteModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error al cargar clientes:', error);
+                showAlert('Error al cargar la lista de clientes', 'danger');
+            }
+        }
+
+        // Confirmar asignación de cliente
+        async function confirmarAsignarCliente() {
+            if (!elevadorIdActual) {
+                showAlert('Error: No se ha seleccionado un elevador', 'danger');
+                return;
+            }
+            
+            const select = document.getElementById('clienteSelect');
+            const input = document.getElementById('clienteIdInput');
+            const clienteId = select.value || input.value;
+            
+            if (!clienteId) {
+                showAlert('Por favor seleccione un cliente o ingrese un ID', 'warning');
+                return;
+            }
+            
+            try {
+                console.log(`Asignando cliente ${clienteId} al elevador ${elevadorIdActual}`);
+                const response = await fetch(`${API_BASE_URL}/${elevadorIdActual}/asignar-cliente/${clienteId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Respuesta recibida:', response.status, response.statusText);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Cliente asignado:', data);
+                    showAlert('Cliente asignado exitosamente', 'success');
+                    
+                    // Cerrar modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('asignarClienteModal'));
+                    modal.hide();
+                    
+                    // Recargar lista de elevadores
+                    loadElevadores();
+                } else {
+                    const errorText = await response.text();
+                    console.error('Error del servidor:', response.status, errorText);
+                    showAlert('Error al asignar cliente: ' + errorText, 'danger');
+                }
+            } catch (error) {
+                console.error('Error al asignar cliente:', error);
+                showAlert('Error de conexión: ' + error.message, 'danger');
+            }
+        }
+
+        // Quitar cliente asignado
+        async function quitarCliente(elevadorId) {
+            if (!confirm('¿Está seguro de que desea quitar el cliente asignado?')) {
+                return;
+            }
+            
+            try {
+                console.log(`Quitando cliente del elevador ${elevadorId}`);
+                const response = await fetch(`${API_BASE_URL}/${elevadorId}/quitar-cliente`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Respuesta recibida:', response.status, response.statusText);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Cliente quitado:', data);
+                    showAlert('Cliente quitado exitosamente', 'success');
+                    
+                    // Recargar lista de elevadores
+                    loadElevadores();
+                } else {
+                    const errorText = await response.text();
+                    console.error('Error del servidor:', response.status, errorText);
+                    showAlert('Error al quitar cliente: ' + errorText, 'danger');
+                }
+            } catch (error) {
+                console.error('Error al quitar cliente:', error);
+                showAlert('Error de conexión: ' + error.message, 'danger');
+            }
+        }
+
+        // Manejar envío del formulario
+        document.getElementById('elevadorForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const capacidadValue = document.getElementById('capacidad').value;
+            const elevador = {
+                modelo: document.getElementById('modelo').value,
+                marca: document.getElementById('marca').value,
+                capacidad: capacidadValue ? parseInt(capacidadValue) : null,
+                direccion: document.getElementById('direccion').value,
+                clienteId: document.getElementById('clienteId').value ? parseInt(document.getElementById('clienteId').value) : null
+            };
+            
+            try {
+                console.log('Enviando elevador:', elevador);
+                const response = await fetch(`${API_BASE_URL}/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(elevador)
+                });
+                
+                console.log('Respuesta recibida:', response.status, response.statusText);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Elevador creado:', data);
+                    showAlert('Elevador creado exitosamente', 'success');
+                    document.getElementById('elevadorForm').reset();
+                    showElevadores();
+                } else {
+                    const errorText = await response.text();
+                    console.error('Error del servidor:', response.status, errorText);
+                    showAlert('Error al crear el elevador: ' + errorText, 'danger');
+                }
+            } catch (error) {
+                console.error('Error al crear elevador:', error);
+                showAlert('Error de conexión: ' + error.message + '. Verifica que el Gateway esté corriendo en el puerto 6768', 'danger');
+            }
+        });
+
+        // Mostrar alertas
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

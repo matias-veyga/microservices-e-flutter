@@ -1,0 +1,33 @@
+name: elevadores_clientes_app
+description: Aplicación móvil Flutter para gestión de clientes y elevadores
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # HTTP para llamadas API
+  http: ^1.1.0
+  
+  # Estado de la aplicación
+  provider: ^6.1.1
+  
+  # UI
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
+  
+  # Utilidades
+  intl: ^0.18.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+

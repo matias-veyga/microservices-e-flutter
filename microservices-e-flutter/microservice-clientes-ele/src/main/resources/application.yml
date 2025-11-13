@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: msvc-cliente
+  cloud:
+    config:
+      enabled: false
+      import-check:
+        enabled: false
+  datasource:
+    url: jdbc:mysql://localhost:3306/microservicebd  # Para LAN: cambiar por jdbc:mysql://192.168.1.100:3306/microservicebd
+    username: root
+    password: 
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+server:
+  port: 8001
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka  # Para LAN: cambiar por http://192.168.1.100:8761/eureka
